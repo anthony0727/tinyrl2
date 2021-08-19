@@ -1,8 +1,8 @@
 import gym
 
-from agents import RandomAgent
-from models.random import RandomModel
-from workers import StepWorker, EpisodeWorker
+from tinyrl2.agents import RandomAgent
+from tinyrl2.models.random import RandomModel
+from tinyrl2.workers import StepWorker, EpisodeWorker
 
 
 def test_step_worker():

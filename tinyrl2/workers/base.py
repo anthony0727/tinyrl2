@@ -4,7 +4,7 @@ import numpy as np
 
 import gym
 
-from agents import Agent
+from tinyrl2.agents import Agent
 
 logger = logging.getLogger(__name__)
 
@@ -35,24 +35,26 @@ class RolloutWorker:
         self.env = env
         self.agent = agent
 
-        self._resolve_env()
+        self.obs, self.done = self._resolve_env()
 
         self.curr_step = 0
         self.curr_episode = 0
 
     def _resolve_env(self):
-        self.obs = self.env.reset()
-        self.done = [False] * self.agent.num_envs
+        obs = self.env.reset()
+        done = [False] * self.agent.num_envs
+
+        return obs, done
 
     def rollout(self):
         action = self.agent.act(self.obs)
         self.obs, rew, self.done, info = self.env.step(action)
 
-    def _postprocess_episode(self):
+    def _postprocess_episode(self, num_steps):
         self.curr_episode += 1
 
         score = 0
-        stat = Statistic(score=score, steps=self.num_steps)
+        stat = Statistic(score=score, steps=num_steps)
         return stat
 
     def add_statistic(self, aa):
@@ -74,14 +76,14 @@ class StepWorker(RolloutWorker):
         super().__init__(env, agent)
 
     def run(self, num_steps):
-        self.num_steps = 0
+        _num_steps = 0
         target_step = self.curr_step + num_steps
         for step in range(self.curr_step, target_step):
-            self.num_steps += 1
+            _num_steps += self.agent.num_envs
             self.rollout()
 
             if self.all_done():
-                episode_stat = self._postprocess_episode()
+                episode_stat = self._postprocess_episode(_num_steps)
                 self.add_statistic(episode_stat)
 
 
@@ -94,19 +96,12 @@ class EpisodeWorker(RolloutWorker):
         super().__init__(env, agent)
 
     def run(self, num_episodes):
-        self.num_steps = 0
+        _num_steps = 0
         target_episode = self.curr_episode + num_episodes
         while self.curr_episode < target_episode:
-            self.num_steps += 1
+            _num_steps += self.agent.num_envs
             self.rollout()
 
             if self.all_done():
-                episode_stat = self._postprocess_episode()
+                episode_stat = self._postprocess_episode(_num_steps)
                 self.add_statistic(episode_stat)
-                print(episode_stat)
-                logger.info(episode_stat)
-
-
-from multiprocessing import Pool
-
-worker_pool = Pool(processes=num_agents)

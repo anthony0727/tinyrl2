@@ -4,12 +4,11 @@ import torch
 import torch.nn.functional as F
 from torch.distributions.categorical import Categorical
 
-
 EPS = 1e-8
 
 
 class ScalarDist:
-# class ScalarDist(torch.distributions.Distribution):
+    # class ScalarDists(torch.distributions.Distribution):
     def __init__(self, vals):
         # super().__init__(validate_args=False)
         self.vals = vals

@@ -1,8 +1,13 @@
 import gym
 from torch import nn
 
+
 # basic modules
-from buffers import Buffer
+class Buffer:
+    def __init__(
+            self
+    ):
+        pass
 
 
 class TorchModel(nn.Module):
@@ -60,11 +65,13 @@ class ValueModel(TorchModel):
     def forward(self, obs):
         pass
 
+
 def _share_encoder(*torch_models):
     encoder = torch_models[0]
     for model in torch_models:
         # TODO: inplace share, resolve double backward if endpoint differs
         model.encoder = encoder
+
 
 # framework
 
@@ -80,7 +87,8 @@ class PolicyValueModel(TorchModel):
         super().__init__(observation_space, action_space)
         self.policy = policy
         self.value = value
-        _share_encoder(self.modules())
+        if share_encoder:
+            _share_encoder(self.modules())
 
     def forward(self, obs):
         policy = self.policy(obs)
@@ -89,30 +97,7 @@ class PolicyValueModel(TorchModel):
         return policy, value
 
 
-class DDPGModel(TorchModel):
-    def __init__(
-            self,
-            observation_space: gym.Space,
-            action_space: gym.Space,
-            policy,
-            value,
-    ):
-        super().__init__(observation_space, action_space)
-        self.policy = policy
-        self.value = value
-
-    def forward(self, obs):
-        pass
-
-    def forward_policy(self, obs):
-        gradient = self.value td error something
-
-        something = self.policy(obs)
-
-        policy = td error + something
-
-        return policy
-
+# Agent
 
 class Agent:
     def __init__(
